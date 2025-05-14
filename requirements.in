@@ -1,0 +1,11 @@
+yt-dlp
+ffmpeg-python
+moviepy
+pandas
+numpy
+opencv-python
+scikit-image
+tqdm
+zipfile36
+urllib3
+librosa

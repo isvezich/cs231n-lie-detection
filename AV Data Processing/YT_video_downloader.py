@@ -11,9 +11,21 @@ import ffmpeg
 class VidInfo:
     def __init__(self, yt_id, file_name, start_time, end_time, outdir):
         self.yt_id = yt_id
-        self.start_time = float(start_time)
-        self.end_time = float(end_time)
+        self.start_time = convert_to_seconds(start_time)
+        self.end_time = convert_to_seconds(end_time)
         self.out_filename = os.path.join(outdir, file_name + '.mp4')
+
+def convert_to_seconds(time_str):
+    if ':' in time_str:
+        # Split the input string by the colon
+        minutes, seconds = map(int, time_str.split(':'))
+    else:
+        # If no colon, assume it's just minutes
+        minutes = int(time_str)
+        seconds = 0
+    # Calculate total seconds
+    total_seconds = minutes * 60 + seconds
+    return total_seconds
 
 
 def download(vidinfo):
@@ -67,7 +79,9 @@ if __name__ == '__main__':
         # yt_id, file_name, start_time, end_time
         vidinfos = [VidInfo(x[0], x[1], x[2], x[3], out_dir) for x in lines]
 
-    bad_files = open('bad_files_{}.txt'.format(split), 'w')
+
+    bad_files = open(os.path.join(split, "bad_files.txt"), 'w')
+
     results = ThreadPool(5).imap_unordered(download, vidinfos)
     cnt = 0
     for r in results:
