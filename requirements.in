@@ -11,3 +11,5 @@ urllib3
 librosa
 ai-edge-litert
 torch
+torchvision
+torchaudio
