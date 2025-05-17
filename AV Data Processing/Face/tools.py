@@ -26,12 +26,12 @@
 # https://github.com/ipazc/mtcnn
 
 
-import tflite_runtime.interpreter as tflite
 import cv2
 import os
 import numpy as np
 from skimage.transform import SimilarityTransform
 from helper import get_file
+from ai_edge_litert.interpreter import Interpreter
 
 
 WEIGHTS_URL = "https://github.com/martlgap/face-alignment-mtcnn/releases/latest/download/weights.zip"
@@ -138,9 +138,9 @@ class FaceAlignmentTools:
         self._scale_factor = scale_factor
         self._alignment_style = alignment_style
 
-        self.p_net = tflite.Interpreter(model_path=os.path.join(weights_path, "p_net.tflite"))
-        self.r_net = tflite.Interpreter(model_path=os.path.join(weights_path, "r_net.tflite"))
-        self.o_net = tflite.Interpreter(model_path=os.path.join(weights_path, "o_net.tflite"))
+        self.p_net = Interpreter(model_path=os.path.join(weights_path, "p_net.tflite"))
+        self.r_net = Interpreter(model_path=os.path.join(weights_path, "r_net.tflite"))
+        self.o_net = Interpreter(model_path=os.path.join(weights_path, "o_net.tflite"))
 
         # Predefined relative target landmarks for alignment
         self._landmarks = {

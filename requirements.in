@@ -9,3 +9,5 @@ tqdm
 zipfile36
 urllib3
 librosa
+ai-edge-litert
+torch
