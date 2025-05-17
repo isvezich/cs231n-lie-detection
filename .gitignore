@@ -2,3 +2,4 @@ lib/
 cs231n/
 venv/
 .venv/
+.idea/
