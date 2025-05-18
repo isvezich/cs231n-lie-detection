@@ -153,9 +153,9 @@ def train_one_epoch(args, train_data_loader, model, optimizer, loss_fn, loss_aud
             # Reseting Gradients
             optimizer.zero_grad()
 
-            grid = torchvision.utils.make_grid(faces)
-            writer.add_image('images', grid, 0)
-            writer.add_graph(model, faces)
+            # grid = torchvision.utils.make_grid(faces)
+            # writer.add_image('images', grid, 0)
+            # writer.add_graph(model, faces)
 
             # Forward
             preds = model(faces)
