@@ -56,6 +56,7 @@ class AudioVisualDataset(Dataset):
         # # required by collate function
         # mono_waveform = waveform.unsqueeze(0)
         # mono_waveform.type(torch.float32)
+        mono_waveform = None
 
         #  get face feature path
         file_path = self.img_dir + clip_name + '/'
