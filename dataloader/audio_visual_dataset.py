@@ -82,6 +82,8 @@ class AudioVisualDataset(Dataset):
             label = 1
         # undefined label error
         else:
+            print("LABEL WAS")
+            print(str_label)
             raise Exception("undefined label")
 
         return mono_waveform, face_frames, label
