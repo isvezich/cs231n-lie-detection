@@ -104,7 +104,8 @@ def af_collate_fn(batch):
         targets += [torch.tensor(label)]
 
     # Group the list of tensors into a batched tensor
-    tensors = af_pad_sequence(tensors)
+    # tensors = af_pad_sequence(tensors)
+    tensors = []
     face_tensors = torch.stack(face_tensors)
     targets = torch.stack(targets)
 
