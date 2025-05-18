@@ -37,25 +37,25 @@ class AudioVisualDataset(Dataset):
         clip_name = self.annos.iloc[idx, 0]
 
         # get audio path
-        audio_path = os.path.join(self.audio_dir, clip_name + '.wav')
-        # load the audio file with torch audio
-        waveform, sample_rate = torchaudio.load(audio_path)
-        # use mono audio instead os stereo audio (use left by default)
-        waveform = waveform[0]
-
-        # calculate duration of the audio clip
-        clip_duration = len(waveform) / sample_rate
-        """
-        # for wav2vec2, 1 Token corresponds to ~ 321.89 discrete samples
-        # to get precisely 64 tokens (a hyperparameter that can be changed), the length of input discrete samples to the model should be 321.89 * 64
-        # divide the above by the clip duration to get new sample rate (or) new_sample_rate * clip_duration = 321.89 * num tokens
-        """
-        new_sample_rate = int(321.893491124260 * self.num_tokens / clip_duration)
-        # resample
-        waveform = torchaudio.functional.resample(waveform, sample_rate, new_sample_rate)
-        # required by collate function
-        mono_waveform = waveform.unsqueeze(0)
-        mono_waveform.type(torch.float32)
+        # audio_path = os.path.join(self.audio_dir, clip_name + '.wav')
+        # # load the audio file with torch audio
+        # waveform, sample_rate = torchaudio.load(audio_path)
+        # # use mono audio instead os stereo audio (use left by default)
+        # waveform = waveform[0]
+        #
+        # # calculate duration of the audio clip
+        # clip_duration = len(waveform) / sample_rate
+        # """
+        # # for wav2vec2, 1 Token corresponds to ~ 321.89 discrete samples
+        # # to get precisely 64 tokens (a hyperparameter that can be changed), the length of input discrete samples to the model should be 321.89 * 64
+        # # divide the above by the clip duration to get new sample rate (or) new_sample_rate * clip_duration = 321.89 * num tokens
+        # """
+        # new_sample_rate = int(321.893491124260 * self.num_tokens / clip_duration)
+        # # resample
+        # waveform = torchaudio.functional.resample(waveform, sample_rate, new_sample_rate)
+        # # required by collate function
+        # mono_waveform = waveform.unsqueeze(0)
+        # mono_waveform.type(torch.float32)
 
         #  get face feature path
         file_path = self.img_dir + clip_name + '/'
