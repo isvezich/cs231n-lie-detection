@@ -5,6 +5,7 @@ import time
 
 import torch
 import torch.nn as nn
+import torchvision
 from torch.utils.data import Dataset, DataLoader
 # from torch.optim.lr_scheduler import ReduceLROnPlateau
 
@@ -16,6 +17,11 @@ from models.fusion_model import Fusion
 from sklearn.metrics import classification_report, accuracy_score, f1_score, roc_curve, auc
 
 from models.visual_model import ViT_model
+from torch.utils.tensorboard import SummaryWriter
+
+
+# Writer will output to ./runs/ directory by default
+writer = SummaryWriter()
 
 
 def parse_options():
@@ -146,6 +152,10 @@ def train_one_epoch(args, train_data_loader, model, optimizer, loss_fn, loss_aud
 
             # Reseting Gradients
             optimizer.zero_grad()
+
+            grid = torchvision.utils.make_grid(faces)
+            writer.add_image('images', grid, 0)
+            writer.add_graph(model, faces)
 
             # Forward
             preds = model(faces)
@@ -396,16 +406,24 @@ def train_test(log_name, args):
             loss, preds, lables, preds_multi, lables_multi = train_one_epoch(args, train_loader, model, optimizer,
                                                                              loss_fn, loss_audio, loss_vision,
                                                                              loss_multi)
+            writer.add_scalar("Loss/train", loss, epoch)
 
             train_acc, train_f1, train_auc = evaluation(lables.detach().cpu().numpy(), preds.detach().cpu().numpy())
+            writer.add_scalar('Accuracy/train', train_acc, epoch)
+            writer.add_scalar('F1/train', train_f1, epoch)
+            writer.add_scalar('Auc/train', train_auc, epoch)
             # Validation
             val_loss, val_preds, val_lables, val_preds_multi, val_lables_multi = val_one_epoch(args, test_loader, model,
                                                                                                loss_fn, loss_audio,
                                                                                                loss_vision,
                                                                                                loss_multi)
 
+            writer.add_scalar("Loss/validation", val_loss, epoch)
             val_acc, val_f1, val_auc = evaluation(val_lables.detach().cpu().numpy(),
                                                   val_preds.detach().cpu().numpy())
+            writer.add_scalar('Accuracy/validation', val_acc, epoch)
+            writer.add_scalar('F1/validation', val_f1, epoch)
+            writer.add_scalar('Auc/validation', val_auc, epoch)
 
             print("epoch {}, train_acc {:.5f}, train_f1: {:.5f}, train_auc:{:.5f} "
                   "test_acc {:.5f}, test_f1: {:.5f}, test_auc:{:.5f}".format(epoch, train_acc, train_f1, train_auc,
@@ -429,6 +447,10 @@ def train_test(log_name, args):
         f.write(val_results)
         f.write("\n\n")
         f.write(multi_task_result)
+
+        writer.flush()
+        writer.close()
+
 
     f.close()
 
