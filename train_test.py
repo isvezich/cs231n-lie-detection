@@ -40,10 +40,10 @@ def parse_options():
                         help='indicate which type of adapter to use - full_conv or efficient_conv or nlp')
     ##### DATA
 
-    parser.add_argument('--data_root', type=str, default='/home/phild/cs231n/cs231n-lie-detection/data/')
-    parser.add_argument('--audio_path', type=str, default='/home/phild/cs231n/cs231n-lie-detection/data/audio_files/',
+    parser.add_argument('--data_root', type=str, default='/Users/phild/cs231n/cs231n-lie-detection/data/')
+    parser.add_argument('--audio_path', type=str, default='/Users/phild/cs231n/cs231n-lie-detection/data/audio_files/',
                         help='audio dataset root dir')
-    parser.add_argument('--visual_path', type=str, default='/home/phild/cs231n/cs231n-lie-detection/data/face_frames/',
+    parser.add_argument('--visual_path', type=str, default='/Users/phild/cs231n/cs231n-lie-detection/data/face_frames/',
                         help='visual (FACE) dataset root dir')
 
     #### TRAINING LOGS
