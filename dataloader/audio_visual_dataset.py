@@ -76,9 +76,9 @@ class AudioVisualDataset(Dataset):
 
         # assign integer to labels
         str_label = self.annos.iloc[idx, 1]
-        if str_label == 'truth' or 'Truth' or str_label == 'truthful' or str_label == 0:
+        if str_label == 'truth' or str_label == 'Truth' or str_label == 'truthful' or str_label == 0:
             label = 0
-        elif str_label == 'deception' or 'Deception' or str_label == 'lie' or str_label == 1:
+        elif str_label == 'deception' or str_label == 'Deception' or str_label == 'lie' or str_label == 1:
             label = 1
         # undefined label error
         else:
