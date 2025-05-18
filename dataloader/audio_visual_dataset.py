@@ -76,6 +76,7 @@ class AudioVisualDataset(Dataset):
 
         # assign integer to labels
         str_label = self.annos.iloc[idx, 1]
+        str_label = str_label.replace(" ", "")
         if str_label == 'truth' or str_label == 'Truth' or str_label == 'truthful' or str_label == 0:
             label = 0
         elif str_label == 'deception' or str_label == 'Deception' or str_label == 'lie' or str_label == 1:
@@ -84,7 +85,7 @@ class AudioVisualDataset(Dataset):
         else:
             print("LABEL WAS")
             print(str_label)
-            raise Exception("undefined label")
+            raise Exception(f"undefined label isss {str_label}")
 
         return mono_waveform, face_frames, label
 
