@@ -41,7 +41,7 @@ def parse_options():
     ##### DATA
 
     parser.add_argument('--data_root', type=str, default='/Users/phild/cs231n/cs231n-lie-detection/data/')
-    parser.add_argument('--audio_path', type=str, default='/Users/phild/cs231n/cs231n-lie-detection/data/audio_files/',
+    parser.add_argument('--audio_path', type=str, default='/Users/phild/cs231n/cs231n-lie-detection/data/audio_files2/',
                         help='audio dataset root dir')
     parser.add_argument('--visual_path', type=str, default='/Users/phild/cs231n/cs231n-lie-detection/data/face_frames/',
                         help='visual (FACE) dataset root dir')
