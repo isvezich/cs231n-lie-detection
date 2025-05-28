@@ -46,21 +46,21 @@ def download(vidinfo):
     except:
         return_msg = '{}, ERROR (youtube)!'.format(vidinfo.yt_id)
         return return_msg
-    try:
-        (
-            ffmpeg
-                .input(download_url, ss=vidinfo.start_time, to=vidinfo.end_time)
-                .output(vidinfo.out_filename, format='mp4', r=25, vcodec='libx264',
-                        crf=18, preset='veryfast', pix_fmt='yuv420p', acodec='aac', audio_bitrate=128000,
-                        strict='experimental')
-                .global_args('-y')
-                .global_args('-loglevel', 'error')
-                .run()
+    # try:
+    (
+        ffmpeg
+            .input(download_url, ss=vidinfo.start_time, to=vidinfo.end_time)
+            .output(vidinfo.out_filename, format='mp4', r=25, vcodec='libx264',
+                    crf=18, preset='veryfast', pix_fmt='yuv420p', acodec='aac', audio_bitrate=128000,
+                    strict='experimental')
+            .global_args('-y')
+            .global_args('-loglevel', 'error')
+            .run()
 
-        )
-    except:
-        return_msg = '{}, ERROR (ffmpeg)!'.format(vidinfo.yt_id)
-        return return_msg
+    )
+    # except:
+    #     return_msg = '{}, ERROR (ffmpeg)!'.format(vidinfo.yt_id)
+    #     return return_msg
 
     return '{}, DONE!'.format(vidinfo.yt_id)
 

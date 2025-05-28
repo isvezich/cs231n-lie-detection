@@ -1,5 +1,7 @@
-import os 
-from moviepy.editor import *
+import os
+
+from moviepy import VideoFileClip
+
 
 target_folder = 'audio_files/'
 

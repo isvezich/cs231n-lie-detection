@@ -37,25 +37,26 @@ class AudioVisualDataset(Dataset):
         clip_name = self.annos.iloc[idx, 0]
 
         # get audio path
-        audio_path = os.path.join(self.audio_dir, clip_name + '.wav')
-        # load the audio file with torch audio
-        waveform, sample_rate = torchaudio.load(audio_path)
-        # use mono audio instead os stereo audio (use left by default)
-        waveform = waveform[0]
-
-        # calculate duration of the audio clip
-        clip_duration = len(waveform) / sample_rate
-        """
-        # for wav2vec2, 1 Token corresponds to ~ 321.89 discrete samples
-        # to get precisely 64 tokens (a hyperparameter that can be changed), the length of input discrete samples to the model should be 321.89 * 64
-        # divide the above by the clip duration to get new sample rate (or) new_sample_rate * clip_duration = 321.89 * num tokens
-        """
-        new_sample_rate = int(321.893491124260 * self.num_tokens / clip_duration)
-        # resample
-        waveform = torchaudio.functional.resample(waveform, sample_rate, new_sample_rate)
-        # required by collate function
-        mono_waveform = waveform.unsqueeze(0)
-        mono_waveform.type(torch.float32)
+        # audio_path = os.path.join(self.audio_dir, clip_name + '.wav')
+        # # load the audio file with torch audio
+        # waveform, sample_rate = torchaudio.load(audio_path)
+        # # use mono audio instead os stereo audio (use left by default)
+        # waveform = waveform[0]
+        #
+        # # calculate duration of the audio clip
+        # clip_duration = len(waveform) / sample_rate
+        # """
+        # # for wav2vec2, 1 Token corresponds to ~ 321.89 discrete samples
+        # # to get precisely 64 tokens (a hyperparameter that can be changed), the length of input discrete samples to the model should be 321.89 * 64
+        # # divide the above by the clip duration to get new sample rate (or) new_sample_rate * clip_duration = 321.89 * num tokens
+        # """
+        # new_sample_rate = int(321.893491124260 * self.num_tokens / clip_duration)
+        # # resample
+        # waveform = torchaudio.functional.resample(waveform, sample_rate, new_sample_rate)
+        # # required by collate function
+        # mono_waveform = waveform.unsqueeze(0)
+        # mono_waveform.type(torch.float32)
+        mono_waveform = None
 
         #  get face feature path
         file_path = self.img_dir + clip_name + '/'
@@ -75,13 +76,16 @@ class AudioVisualDataset(Dataset):
 
         # assign integer to labels
         str_label = self.annos.iloc[idx, 1]
-        if str_label == 'truth' or str_label == 'truthful' or str_label == 0:
+        str_label = str_label.replace(" ", "")
+        if str_label == 'truth' or str_label == 'Truth' or str_label == 'truthful' or str_label == 0:
             label = 0
-        elif str_label == 'deception' or str_label == 'lie' or str_label == 1:
+        elif str_label == 'deception' or str_label == 'Deception' or str_label == 'lie' or str_label == 1:
             label = 1
         # undefined label error
         else:
-            raise Exception("undefined label")
+            print("LABEL WAS")
+            print(str_label)
+            raise Exception(f"undefined label isss {str_label}")
 
         return mono_waveform, face_frames, label
 
@@ -103,7 +107,8 @@ def af_collate_fn(batch):
         targets += [torch.tensor(label)]
 
     # Group the list of tensors into a batched tensor
-    tensors = af_pad_sequence(tensors)
+    # tensors = af_pad_sequence(tensors)
+    tensors = []
     face_tensors = torch.stack(face_tensors)
     targets = torch.stack(targets)
 
