@@ -1,0 +1,103 @@
+import torch
+import torch.nn as nn
+import torchvision
+from models.adapter import mvit_adapter_conv, mvit_adapter_nlp
+
+
+
+class conv3d_block(nn.Module):
+    def __init__(self, in_channels, out_channels, pad='same', k=3, s=1):
+        super(conv3d_block, self).__init__()
+
+        self.conv = nn.Conv3d(in_channels, out_channels, kernel_size=k, padding=pad, stride=s, bias=False)
+        self.bn = nn.BatchNorm3d(out_channels)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = self.relu(self.bn(self.conv(x)))
+        return x
+
+
+class cnn_face(nn.Module):
+    def __init__(self, ):
+        super(cnn_face, self).__init__()
+
+        self.conv1 = conv3d_block(3, 64, k=7, pad=(3, 3, 3), s=2)
+        self.layer1 = nn.Sequential(
+            conv3d_block(64, 64),
+            conv3d_block(64, 64),
+        )
+
+        self.conv2 = conv3d_block(64, 128, k=3, pad=(1, 1, 1), s=2)
+        self.layer2 = nn.Sequential(
+            conv3d_block(128, 128),
+            conv3d_block(128, 128),
+        )
+
+        self.conv3 = conv3d_block(128, 256, k=3, pad=(1, 1, 1), s=2)
+        self.layer3 = nn.Sequential(
+            conv3d_block(256, 256),
+            conv3d_block(256, 256),
+        )
+
+        self.avg_pool = nn.AdaptiveAvgPool3d(1)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.layer1(x) + x
+        x = self.conv2(x)
+        x = self.layer2(x) + x
+        x = self.conv3(x)
+        x = self.layer3(x) + x
+
+        return self.avg_pool(x)
+
+
+class MViT_model(nn.Module):
+    def __init__(self, num_encoders=4, adapter=True, adapter_type='nlp'):
+        super(MViT_model, self).__init__()
+
+        self.adapter = adapter
+        self.adapter_type = adapter_type
+
+        # Feature extractor (same CNN as before)
+        self.cnn_feature_extractor = cnn_face()
+        self.projection = nn.Sequential(
+            nn.Linear(256, 96),  # Match MViT expected input dim
+            nn.ReLU(),
+        )
+
+        # Load pretrained MViT
+        base_mvit = torchvision.video_models.mvit_v2_s(weights="DEFAULT")
+        self.pos_embedding = nn.Parameter(torch.zeros(1, 64, 96))  # 96 dim for MViT input
+
+        # Build custom encoder with adapters
+        layers = []
+        for i in range(num_encoders):
+            block = base_mvit.blocks[i]
+            if adapter:
+                if adapter_type == 'nlp':
+                    layers.append(mvit_adapter_nlp(transformer_block=block))
+                else:
+                    raise NotImplementedError("Only NLP-style adapter implemented")
+            else:
+                for p in block.parameters():
+                    p.requires_grad = True
+                layers.append(block)
+
+        layers.append(base_mvit.norm)
+        self.ViT_Encoder = nn.Sequential(*layers)
+
+        # Output head
+        self.classifier = nn.Linear(96, 2)
+
+    def forward(self, x):
+        b_s, n_f, C, H, W = x.shape
+        x = x.view(b_s * n_f, C, H, W)
+        features = self.cnn_feature_extractor(x)
+        features = features.view(b_s, n_f, 256)
+
+        x = self.projection(features) + self.pos_embedding
+        x = self.ViT_Encoder(x)
+        logits = self.classifier(x)
+        return torch.mean(logits, 1)

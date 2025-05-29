@@ -17,6 +17,7 @@ from models.fusion_model import Fusion
 from sklearn.metrics import classification_report, accuracy_score, f1_score, roc_curve, auc
 
 from models.visual_model import ViT_model
+from models.video_model import MViT_model
 from torch.utils.tensorboard import SummaryWriter
 
 
@@ -78,7 +79,7 @@ def parse_options():
 
     parser.add_argument('--model_name', type=str, default='DOLOS_')
     parser.add_argument('--model_to_train', type=str, default='fusion',
-                        help='specify vision or audio or fusion- indiciates the model to be trained')
+                        help='specify video or vision or audio or fusion- indiciates the model to be trained')
     parser.add_argument('--fusion_type', type=str, default='cross2', help='modality fusion type')
 
     opts = parser.parse_args()
@@ -101,7 +102,7 @@ def parse_options():
     return opts
 
 
-def train_one_epoch(args, train_data_loader, model, optimizer, loss_fn, loss_audio, loss_vision, loss_multi):
+def train_one_epoch(args, train_data_loader, model, optimizer, loss_fn, loss_audio, loss_vision, loss_video, loss_multi):
     ### Local Parameters
     epoch_loss = []
     epoch_predictions = []
@@ -115,7 +116,7 @@ def train_one_epoch(args, train_data_loader, model, optimizer, loss_fn, loss_aud
     if args.model_to_train == "audio":
 
         ###Iterating over data loader
-        for i, (waves, _, labels) in enumerate(train_data_loader):
+        for i, (waves, _, _, labels) in enumerate(train_data_loader):
             # required only for audio with shape [bs, 1 , sample length] ; does not affect face frames tensor
             waves = waves.squeeze(1)
 
@@ -146,7 +147,39 @@ def train_one_epoch(args, train_data_loader, model, optimizer, loss_fn, loss_aud
     elif args.model_to_train == "vision":
 
         ###Iterating over data loader
-        for i, (_, faces, labels) in enumerate(train_data_loader):
+        for i, (_, faces, _, labels) in enumerate(train_data_loader):
+            faces = faces.to(args.device)
+            labels = labels.to(args.device)
+
+            # Reseting Gradients
+            optimizer.zero_grad()
+
+            # grid = torchvision.utils.make_grid(faces)
+            # writer.add_image('images', grid, 0)
+            # writer.add_graph(model, faces)
+
+            # Forward
+            preds = model(faces)
+
+            # Calculating Loss
+            _loss = loss_fn(preds, labels)
+            loss = _loss.item()
+            epoch_loss.append(loss)
+
+            # Backward
+            _loss.backward()
+            optimizer.step()
+
+            epoch_predictions.append(torch.argmax(preds, dim=1))
+            epoch_labels.append(labels)
+
+            if i % 10 == 0:
+                print("iter {}, loss {:.5f}".format(str(i), loss))
+
+    elif args.model_to_train == "video":
+
+        ###Iterating over data loader
+        for i, (_, _, faces, labels) in enumerate(train_data_loader):
             faces = faces.to(args.device)
             labels = labels.to(args.device)
 
@@ -176,7 +209,7 @@ def train_one_epoch(args, train_data_loader, model, optimizer, loss_fn, loss_aud
                 print("iter {}, loss {:.5f}".format(str(i), loss))
 
     else:  # fusion models
-        for i, (waves, faces, labels) in enumerate(train_data_loader):
+        for i, (waves, faces, _, labels) in enumerate(train_data_loader):
             waves = waves.squeeze(1)
 
             # Loading waves and labels to device
@@ -226,7 +259,7 @@ def train_one_epoch(args, train_data_loader, model, optimizer, loss_fn, loss_aud
     return epoch_loss, epoch_predictions, epoch_labels, None, None
 
 
-def val_one_epoch(args, val_data_loader, model, loss_fn, loss_audio, loss_vision, loss_multi):
+def val_one_epoch(args, val_data_loader, model, loss_fn, loss_audio, loss_vision, loss_video, loss_multi):
     #  Local Parameters
     epoch_loss = []
     epoch_predictions = []
@@ -258,6 +291,23 @@ def val_one_epoch(args, val_data_loader, model, loss_fn, loss_audio, loss_vision
                 epoch_predictions.append(torch.argmax(preds, dim=1))
                 epoch_labels.append(labels)
         elif args.model_to_train == "vision":
+            for _, faces, labels in val_data_loader:
+                # Loading waves and labels to device
+                faces = faces.to(args.device)
+                labels = labels.to(args.device)
+
+                # Forward
+                preds = model(faces)
+
+                # Calculating Loss
+                _loss = loss_fn(preds, labels)
+                loss = _loss.item()
+                epoch_loss.append(loss)
+
+                epoch_predictions.append(torch.argmax(preds, dim=1))
+                epoch_labels.append(labels)
+
+        elif args.model_to_train == "video":
             for _, faces, labels in val_data_loader:
                 # Loading waves and labels to device
                 faces = faces.to(args.device)
@@ -349,7 +399,7 @@ def train_test(log_name, args):
         train_anno = args.data_root + 'protocols/' + train
         test_anno = args.data_root + 'protocols/' + test
 
-        if args.model_to_train in ['audio', 'vision', 'fusion', ]:
+        if args.model_to_train in ['audio', 'vision', 'video', 'fusion', ]:
             train_dataset = AudioVisualDataset(train_anno, args.audio_path, args.visual_path)
             test_dataset = AudioVisualDataset(test_anno, args.audio_path, args.visual_path)
             train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True,
@@ -360,7 +410,7 @@ def train_test(log_name, args):
                                      num_workers=4)
 
         else:
-            raise Exception(" please indicate which model to train: audio, vision or fusion ...")
+            raise Exception(" please indicate which model to train: audio, vision, video, or fusion ...")
 
         print("\t Dataset Loaded")
 
@@ -369,6 +419,9 @@ def train_test(log_name, args):
             model.to(args.device)
         elif args.model_to_train == 'vision':
             model = ViT_model(args.num_encoders, args.adapter, args.adapter_type)
+            model.to(args.device)
+        elif args.model_to_train == 'video':
+            model = MViT_model(args.num_encoders, args.adapter, args.adapter_type)
             model.to(args.device)
         else:
             model = Fusion(args.fusion_type, args.num_encoders, args.adapter,
@@ -384,9 +437,10 @@ def train_test(log_name, args):
         if args.multi:
             loss_audio = nn.CrossEntropyLoss()
             loss_vision = nn.CrossEntropyLoss()
+            loss_video = nn.CrossEntropyLoss()
             loss_multi = None
         else:
-            loss_audio = loss_vision = loss_multi = None
+            loss_audio = loss_vision = loss_video = loss_multi = None
 
         best_acc = 0.0
         best_mae = 100.0
@@ -404,7 +458,7 @@ def train_test(log_name, args):
 
             # Training
             loss, preds, lables, preds_multi, lables_multi = train_one_epoch(args, train_loader, model, optimizer,
-                                                                             loss_fn, loss_audio, loss_vision,
+                                                                             loss_fn, loss_audio, loss_vision, loss_video,
                                                                              loss_multi)
             writer.add_scalar("Loss/train", loss, epoch)
 
@@ -416,6 +470,7 @@ def train_test(log_name, args):
             val_loss, val_preds, val_lables, val_preds_multi, val_lables_multi = val_one_epoch(args, test_loader, model,
                                                                                                loss_fn, loss_audio,
                                                                                                loss_vision,
+                                                                                               loss_video,
                                                                                                loss_multi)
 
             writer.add_scalar("Loss/validation", val_loss, epoch)

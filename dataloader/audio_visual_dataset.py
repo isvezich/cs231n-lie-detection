@@ -26,6 +26,11 @@ class AudioVisualDataset(Dataset):
             # normalize to imagenet mean and std values
             T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
+        self.transforms_video = T.Compose([
+            T.ToTensor(),  # Converts H x W x C in [0, 255] to C x H x W in [0.0, 1.0]
+            T.Resize((224, 224)),
+            T.Normalize(mean=[0.45, 0.45, 0.45], std=[0.225, 0.225, 0.225])
+        ])
         self.number_of_target_frames = num_tokens
 
     def __len__(self):
@@ -74,6 +79,9 @@ class AudioVisualDataset(Dataset):
         face_frames = torch.stack(face_frames, 0)
         face_frames.type(torch.float32)
 
+        # reshape for video data
+        face_frames_video = face_frames.permute(1, 0, 2, 3)
+
         # assign integer to labels
         str_label = self.annos.iloc[idx, 1]
         str_label = str_label.replace(" ", "")
@@ -87,7 +95,7 @@ class AudioVisualDataset(Dataset):
             print(str_label)
             raise Exception(f"undefined label isss {str_label}")
 
-        return mono_waveform, face_frames, label
+        return mono_waveform, face_frames, face_frames_video, label
 
 
 def af_pad_sequence(batch):
@@ -98,18 +106,20 @@ def af_pad_sequence(batch):
 
 
 def af_collate_fn(batch):
-    tensors, face_tensors, targets = [], [], []
+    tensors, face_tensors, face_video_tensors, targets = [], [], [], []
 
     # Gather in lists, and encode labels as indices
-    for waveform, face_frames, label in batch:
+    for waveform, face_frames, face_video_frames, label in batch:
         tensors += [waveform]
         face_tensors += [face_frames]
+        face_video_tensors += [face_video_frames]
         targets += [torch.tensor(label)]
 
     # Group the list of tensors into a batched tensor
     # tensors = af_pad_sequence(tensors)
     tensors = []
     face_tensors = torch.stack(face_tensors)
+    face_video_tensors = torch.stack(face_video_tensors)
     targets = torch.stack(targets)
 
-    return tensors, face_tensors, targets
+    return tensors, face_tensors, face_video_tensors, targets

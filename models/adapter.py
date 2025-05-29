@@ -66,6 +66,38 @@ class vit_adapter_nlp(nn.Module):
         return ffn
 
 
+class mvit_adapter_nlp(nn.Module):
+    def __init__(self, transformer_block):
+        super(mvit_adapter_nlp, self).__init__()
+        self.norm1 = transformer_block.norm1
+        self.attn = transformer_block.attn
+        self.norm2 = transformer_block.norm2
+        self.mlp = transformer_block.mlp
+        self.drop_path = transformer_block.drop_path
+
+        self.adapter = nn.Sequential(
+            nn.Dropout(0.1),
+            nn.Linear(transformer_block.dim, 256),
+            nn.ReLU(),
+            nn.Linear(256, transformer_block.dim),
+            nn.LayerNorm(transformer_block.dim)
+        )
+
+    def forward(self, x):
+        x_res = x
+        x = self.norm1(x)
+        x = self.attn(x)
+        x = self.drop_path(x) + x_res
+
+        x_res = x
+        x = self.adapter(x) + x
+        x = self.norm2(x)
+        x = self.mlp(x)
+        x = self.drop_path(x) + x_res
+        return x
+
+
+
 ################# Convolutional Adapters ####################
 
 # Conv pass runs parallel to MHSA and/or FFN.
@@ -171,3 +203,52 @@ class vit_adapter_conv(nn.Module):
         ffn = self.adapter_norm2(ffn)
 
         return ffn
+
+
+class mvit_adapter_conv(nn.Module):
+    def __init__(self, transformer_block, token_size=(8, 8)):
+        super(mvit_adapter_conv, self).__init__()
+
+        self.norm1 = transformer_block.norm1
+        self.attn = transformer_block.attn
+        self.norm2 = transformer_block.norm2
+        self.mlp = transformer_block.mlp
+        self.drop_path = transformer_block.drop_path
+
+        self.token_size = token_size  # spatial layout HxW
+        dim = transformer_block.norm1.normalized_shape[0]
+
+        # Conv paths
+        self.mhsa_conv_pass = Efficient_Conv_Pass(dim)
+        self.ffn_conv_pass = Efficient_Conv_Pass(dim)
+
+        self.adapter_norm1 = nn.LayerNorm(dim)
+        self.adapter_norm2 = nn.LayerNorm(dim)
+
+    def forward(self, x):
+        B, N, D = x.shape
+        H, W = self.token_size
+
+        # [B, N, D] → [B, D, H, W] for conv pass
+        x_reshaped = x.transpose(1, 2).reshape(B, D, H, W)
+        conv_pass_mhsa = self.mhsa_conv_pass(x_reshaped).reshape(B, D, -1).transpose(1, 2)
+
+        # Attention block
+        res = x
+        x = self.norm1(x)
+        x = self.attn(x)
+        x = self.drop_path(x)
+        x = x + res + conv_pass_mhsa
+        x = self.adapter_norm1(x)
+
+        # FFN
+        res = x
+        x = self.norm2(x)
+        x = self.mlp(x)
+        x = self.drop_path(x)
+
+        conv_pass_ffn = self.ffn_conv_pass(x.transpose(1, 2).reshape(B, D, H, W)).reshape(B, D, -1).transpose(1, 2)
+        x = x + res + conv_pass_ffn
+        x = self.adapter_norm2(x)
+
+        return x
