@@ -7,6 +7,8 @@ import torch
 import torch.nn as nn
 import torchvision
 from torch.utils.data import Dataset, DataLoader
+
+from dataloader.audio_compressed_visual_dataset import AudioCompressedVisualDataset
 # from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from dataloader.audio_visual_dataset import AudioVisualDataset, af_collate_fn
@@ -19,6 +21,7 @@ from sklearn.metrics import classification_report, accuracy_score, f1_score, roc
 from models.visual_model import ViT_model
 from torch.utils.tensorboard import SummaryWriter
 
+from models.visual_model_compressed import ViT_compressed_model
 
 # Writer will output to ./runs/ directory by default
 writer = SummaryWriter()
@@ -46,17 +49,17 @@ def parse_options():
                         help='indicate which type of adapter to use - full_conv or efficient_conv or nlp')
     ##### DATA
 
-    parser.add_argument('--data_root', type=str, default='/Users/phild/cs231n/cs231n-lie-detection/data/')
-    parser.add_argument('--audio_path', type=str, default='/Users/phild/cs231n/cs231n-lie-detection/data/audio_files2/',
+    parser.add_argument('--data_root', type=str, default='/home/lillian/src/cs231n-lie-detection/data/')
+    parser.add_argument('--audio_path', type=str, default='/home/lillian/src/cs231n-lie-detection/data/audio_files/',
                         help='audio dataset root dir')
-    parser.add_argument('--visual_path', type=str, default='/Users/phild/cs231n/cs231n-lie-detection/data/face_frames/',
+    parser.add_argument('--visual_path', type=str, default='/home/lillian/src/cs231n-lie-detection/data/compressed_frames/',
                         help='visual (FACE) dataset root dir')
 
     #### TRAINING LOGS
 
     parser.add_argument('--log', type=str, default="logs", help='log and save model name')
     parser.add_argument('--protocols', type=list,
-                        default=[['train_fold3.csv', 'test_fold3.csv']],
+                        default=[['train_fold4.csv', 'test_fold4.csv']],
                         help='protocols for train/test')
 
     """
@@ -143,7 +146,7 @@ def train_one_epoch(args, train_data_loader, model, optimizer, loss_fn, loss_aud
 
             if i % 10 == 0:
                 print("iter {}, loss {:.5f}".format(str(i), loss))
-    elif args.model_to_train == "vision":
+    elif args.model_to_train == "vision" or args.model_to_train == "vision_compressed":
 
         ###Iterating over data loader
         for i, (_, faces, labels) in enumerate(train_data_loader):
@@ -257,7 +260,7 @@ def val_one_epoch(args, val_data_loader, model, loss_fn, loss_audio, loss_vision
 
                 epoch_predictions.append(torch.argmax(preds, dim=1))
                 epoch_labels.append(labels)
-        elif args.model_to_train == "vision":
+        elif args.model_to_train == "vision" or args.model_to_train == "vision_compressed":
             for _, faces, labels in val_data_loader:
                 # Loading waves and labels to device
                 faces = faces.to(args.device)
@@ -349,7 +352,7 @@ def train_test(log_name, args):
         train_anno = args.data_root + 'protocols/' + train
         test_anno = args.data_root + 'protocols/' + test
 
-        if args.model_to_train in ['audio', 'vision', 'fusion', ]:
+        if args.model_to_train in ['audio', 'vision', 'fusion']:
             train_dataset = AudioVisualDataset(train_anno, args.audio_path, args.visual_path)
             test_dataset = AudioVisualDataset(test_anno, args.audio_path, args.visual_path)
             train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True,
@@ -358,7 +361,15 @@ def train_test(log_name, args):
             test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True,
                                      collate_fn=af_collate_fn,
                                      num_workers=4)
-
+        elif args.model_to_train in ['vision_compressed']:
+            train_dataset = AudioCompressedVisualDataset(train_anno, args.audio_path, args.visual_path)
+            test_dataset = AudioCompressedVisualDataset(test_anno, args.audio_path, args.visual_path)
+            train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True,
+                                      collate_fn=af_collate_fn,
+                                      num_workers=4)
+            test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True,
+                                     collate_fn=af_collate_fn,
+                                     num_workers=4)
         else:
             raise Exception(" please indicate which model to train: audio, vision or fusion ...")
 
@@ -369,6 +380,9 @@ def train_test(log_name, args):
             model.to(args.device)
         elif args.model_to_train == 'vision':
             model = ViT_model(args.num_encoders, args.adapter, args.adapter_type)
+            model.to(args.device)
+        elif args.model_to_train == 'vision_compressed':
+            model = ViT_compressed_model(args.num_encoders, args.adapter, args.adapter_type)
             model.to(args.device)
         else:
             model = Fusion(args.fusion_type, args.num_encoders, args.adapter,

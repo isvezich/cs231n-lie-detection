@@ -13,3 +13,5 @@ ai-edge-litert
 torch
 torchvision
 torchaudio
+jaxlib
+jax
