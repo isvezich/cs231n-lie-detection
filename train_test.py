@@ -147,7 +147,7 @@ def train_one_epoch(args, train_data_loader, model, optimizer, loss_fn, loss_aud
 
             if i % 10 == 0:
                 print("iter {}, loss {:.5f}".format(str(i), loss))
-    elif args.model_to_train == "vision" or args.model_to_train == "vision_compressed":
+    elif args.model_to_train == "vision":
 
         ###Iterating over data loader
         for i, (_, faces, _, labels) in enumerate(train_data_loader):
