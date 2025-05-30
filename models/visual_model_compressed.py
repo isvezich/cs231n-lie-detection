@@ -68,7 +68,7 @@ class ViT_compressed_model(nn.Module):
 
         # Load imagenet pretrained ViT Base 16 and freeze all parameters first
         vit_b_16 = torchvision.models.vit_b_16(pretrained=True)
-        for p in vit_b_16.parameters(): p.requires_grad = False
+        # for p in vit_b_16.parameters(): p.requires_grad = False
         # extract encoder alone and discard CNN (patchify + linear projection) feature extractor, classifer head
         # Refer Encoder() class in https://pytorch.org/vision/main/_modules/torchvision/models/vision_transformer.html
         vit = vit_b_16.encoder
