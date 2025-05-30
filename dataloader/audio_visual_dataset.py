@@ -26,11 +26,11 @@ class AudioVisualDataset(Dataset):
             # normalize to imagenet mean and std values
             T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
-        self.transforms_video = T.Compose([
-            T.ToTensor(),  # Converts H x W x C in [0, 255] to C x H x W in [0.0, 1.0]
-            T.Resize((224, 224)),
-            T.Normalize(mean=[0.45, 0.45, 0.45], std=[0.225, 0.225, 0.225])
-        ])
+        # self.transforms_video = T.Compose([
+        #     T.ToTensor(),  # Converts H x W x C in [0, 255] to C x H x W in [0.0, 1.0]
+        #     T.Resize((frame_size, frame_size)),
+        #     T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        # ])
         self.number_of_target_frames = num_tokens
 
     def __len__(self):
@@ -79,8 +79,12 @@ class AudioVisualDataset(Dataset):
         face_frames = torch.stack(face_frames, 0)
         face_frames.type(torch.float32)
 
-        # reshape for video data
-        face_frames_video = face_frames.permute(1, 0, 2, 3)
+        # print(f"face_frames shape: {face_frames.shape}")
+
+        # reshape for video data to make it 5D (batch_size, channels, depth, height, width)
+        face_frames_video = face_frames #face_frames.unsqueeze(0)
+
+        # print(f"face_frames_video shape: {face_frames_video.shape}")
 
         # assign integer to labels
         str_label = self.annos.iloc[idx, 1]

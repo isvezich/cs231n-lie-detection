@@ -4,6 +4,8 @@
 #
 #    pip-compile requirements.in
 #
+absl-py==2.3.0
+    # via tensorboard
 ai-edge-litert==1.3.0
     # via -r requirements.in
 audioread==3.0.1
@@ -30,6 +32,8 @@ fsspec==2025.5.1
     # via torch
 future==1.0.0
     # via ffmpeg-python
+grpcio==1.71.0
+    # via tensorboard
 idna==3.10
     # via requests
 imageio==2.37.0
@@ -46,7 +50,7 @@ jaxlib==0.6.1
     #   jax
 jinja2==3.1.6
     # via torch
-joblib==1.5.0
+joblib==1.5.1
     # via
     #   librosa
     #   scikit-learn
@@ -58,25 +62,29 @@ librosa==0.11.0
     # via -r requirements.in
 llvmlite==0.44.0
     # via numba
+markdown==3.8
+    # via tensorboard
 markupsafe==3.0.2
-    # via jinja2
+    # via
+    #   jinja2
+    #   werkzeug
 ml-dtypes==0.5.1
     # via
     #   jax
     #   jaxlib
-moviepy==2.1.2
+moviepy==2.2.1
     # via -r requirements.in
 mpmath==1.3.0
     # via sympy
 msgpack==1.1.0
     # via librosa
-networkx==3.4.2
+networkx==3.5
     # via
     #   scikit-image
     #   torch
 numba==0.61.2
     # via librosa
-numpy==2.2.5
+numpy==2.2.6
     # via
     #   -r requirements.in
     #   ai-edge-litert
@@ -94,6 +102,7 @@ numpy==2.2.5
     #   scipy
     #   soundfile
     #   soxr
+    #   tensorboard
     #   tifffile
     #   torchvision
 opencv-python==4.11.0.86
@@ -105,9 +114,10 @@ packaging==25.0
     #   lazy-loader
     #   pooch
     #   scikit-image
+    #   tensorboard
 pandas==2.2.3
     # via -r requirements.in
-pillow==10.4.0
+pillow==11.2.1
     # via
     #   imageio
     #   moviepy
@@ -119,6 +129,8 @@ pooch==1.8.2
     # via librosa
 proglog==0.1.12
     # via moviepy
+protobuf==6.31.1
+    # via tensorboard
 pycparser==2.22
     # via cffi
 python-dateutil==2.9.0.post0
@@ -141,16 +153,22 @@ scipy==1.15.3
     #   scikit-image
     #   scikit-learn
 six==1.17.0
-    # via python-dateutil
+    # via
+    #   python-dateutil
+    #   tensorboard
 soundfile==0.13.1
     # via librosa
 soxr==0.5.0.post1
     # via librosa
 sympy==1.14.0
     # via torch
+tensorboard==2.19.0
+    # via -r requirements.in
+tensorboard-data-server==0.7.2
+    # via tensorboard
 threadpoolctl==3.6.0
     # via scikit-learn
-tifffile==2025.5.10
+tifffile==2025.5.26
     # via scikit-image
 torch==2.7.0
     # via
@@ -177,7 +195,9 @@ urllib3==2.4.0
     # via
     #   -r requirements.in
     #   requests
-yt-dlp==2025.4.30
+werkzeug==3.1.3
+    # via tensorboard
+yt-dlp==2025.5.22
     # via -r requirements.in
 zipfile36==0.1.3
     # via -r requirements.in

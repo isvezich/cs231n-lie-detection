@@ -14,7 +14,9 @@ class conv3d_block(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, x):
-        x = self.relu(self.bn(self.conv(x)))
+        x = self.conv(x)
+        x = self.bn(x)
+        x = self.relu(x)
         return x
 
 
@@ -22,13 +24,13 @@ class cnn_face(nn.Module):
     def __init__(self, ):
         super(cnn_face, self).__init__()
 
-        self.conv1 = conv3d_block(3, 64, k=7, pad=(3, 3, 3), s=2)
+        self.conv1 = conv3d_block(64, 64, k=7, pad=3, s=2)
         self.layer1 = nn.Sequential(
             conv3d_block(64, 64),
             conv3d_block(64, 64),
         )
 
-        self.conv2 = conv3d_block(64, 128, k=3, pad=(1, 1, 1), s=2)
+        self.conv2 = conv3d_block(64, 128, k=3, pad=3, s=2)
         self.layer2 = nn.Sequential(
             conv3d_block(128, 128),
             conv3d_block(128, 128),
@@ -40,7 +42,7 @@ class cnn_face(nn.Module):
             conv3d_block(256, 256),
         )
 
-        self.avg_pool = nn.AdaptiveAvgPool3d(1)
+        self.avg_pool = nn.AdaptiveAvgPool3d(4)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -68,7 +70,7 @@ class MViT_model(nn.Module):
         )
 
         # Load pretrained MViT
-        base_mvit = torchvision.video_models.mvit_v2_s(weights="DEFAULT")
+        base_mvit = torchvision.models.video.mvit_v2_s(weights="DEFAULT")
         self.pos_embedding = nn.Parameter(torch.zeros(1, 64, 96))  # 96 dim for MViT input
 
         # Build custom encoder with adapters
@@ -79,25 +81,41 @@ class MViT_model(nn.Module):
                 if adapter_type == 'nlp':
                     layers.append(mvit_adapter_nlp(transformer_block=block))
                 else:
-                    raise NotImplementedError("Only NLP-style adapter implemented")
+                    layers.append(mvit_adapter_conv(transformer_block=block))
             else:
                 for p in block.parameters():
                     p.requires_grad = True
                 layers.append(block)
 
-        layers.append(base_mvit.norm)
-        self.ViT_Encoder = nn.Sequential(*layers)
+        # layers.append(base_mvit.norm)
+        self.MViT_Encoder = nn.Sequential(*layers)
 
         # Output head
-        self.classifier = nn.Linear(96, 2)
+        self.classifier = nn.Linear(384, 2)
 
     def forward(self, x):
+        # print(x.shape)
         b_s, n_f, C, H, W = x.shape
-        x = x.view(b_s * n_f, C, H, W)
+        # x = x.view(b_s * n_f, C, H, W)  # TODO: this seems to make it 4d, why?
         features = self.cnn_feature_extractor(x)
+        # print(f"features shape: {features.shape}")
         features = features.view(b_s, n_f, 256)
 
-        x = self.projection(features) + self.pos_embedding
-        x = self.ViT_Encoder(x)
+        x = self.projection(features)
+        # print(f"x shape after projection: {x.shape}")
+        x = x + self.pos_embedding
+        # print(f"x shape after pos embedding: {x.shape}")
+        # x = self.MViT_Encoder(x)
+
+        for block in self.MViT_Encoder:
+            if hasattr(block, 'forward'):
+                # b_s, n_f, d = x.shape
+                thw = (64 - 1, 1, 1)
+                # print(f"x.shape: {x.shape}, thw shape: {thw}")
+                x, thw = block(x, thw)
+                # print("finished block")
+            else:
+                x = block(x)
+
         logits = self.classifier(x)
         return torch.mean(logits, 1)
