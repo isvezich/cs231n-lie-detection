@@ -94,7 +94,6 @@ class AudioCompressedVisualDataset(Dataset):
         face_frames.type(torch.float32)
         # print("FRAMES FINAL")
         # print(face_frames.shape)
-        face_frames.type(torch.float32)
 
         # assign integer to labels
         str_label = self.annos.iloc[idx, 1]

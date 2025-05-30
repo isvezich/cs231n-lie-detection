@@ -22,19 +22,19 @@ class cnn_face(nn.Module):
     def __init__(self, ):
         super(cnn_face, self).__init__()
 
-        self.conv1 = conv2d_block(1, 64, k=3, pad=(1, 1), s=2)
+        self.conv1 = conv2d_block(1, 64, k=3, pad=(1, 1), s=1)
         self.layer1 = nn.Sequential(
             conv2d_block(64, 64),
             conv2d_block(64, 64),
         )
 
-        self.conv2 = conv2d_block(64, 128, k=3, pad=(1, 1), s=2)
+        self.conv2 = conv2d_block(64, 128, k=3, pad=(1, 1), s=1)
         self.layer2 = nn.Sequential(
             conv2d_block(128, 128),
             conv2d_block(128, 128),
         )
 
-        self.conv3 = conv2d_block(128, 256, k=3, pad=(1, 1), s=2)
+        self.conv3 = conv2d_block(128, 256, k=3, pad=(1, 1), s=1)
         self.layer3 = nn.Sequential(
             conv2d_block(256, 256),
             conv2d_block(256, 256),
