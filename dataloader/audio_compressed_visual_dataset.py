@@ -24,7 +24,7 @@ class AudioCompressedVisualDataset(Dataset):
             T.ConvertImageDtype(torch.float32),
             # T.Resize(frame_size),
             # normalize to imagenet mean and std values
-            T.Normalize(mean=[0.456], std=[0.225]),
+            # T.Normalize(mean=[0.456], std=[0.225]),
         ])
         self.number_of_target_frames = num_tokens
 
