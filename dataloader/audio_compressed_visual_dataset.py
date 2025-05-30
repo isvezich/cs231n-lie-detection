@@ -69,8 +69,9 @@ class AudioCompressedVisualDataset(Dataset):
         frames = frames[0, :, :, :, :]
         print("AFTER SQ")
         print(frames.shape)
-        index = np.random.choice(frames.shape[0], self.number_of_target_frames, replace=False)
-        frames = frames[index]
+        if frames.shape[0] > self.number_of_target_frames:
+            index = np.random.choice(frames.shape[0], self.number_of_target_frames, replace=False)
+            frames = frames[index]
         print("FRAMES AFTER")
         print(frames.shape)
 
