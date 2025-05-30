@@ -75,6 +75,8 @@ class AudioVisualDataset(Dataset):
         face_frames = []
         for i in target_frames:
             img = np.asarray(Image.open(file_path + frame_names[i])) / 255.0
+            print("IMAGE IS")
+            print(img.shape)
             face_frames.append(self.transforms(img))
         face_frames = torch.stack(face_frames, 0)
         face_frames.type(torch.float32)
