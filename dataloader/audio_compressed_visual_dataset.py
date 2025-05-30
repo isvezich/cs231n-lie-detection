@@ -112,7 +112,7 @@ def af_pad_sequence(batch):
     return batch.permute(0, 2, 1)
 
 
-def af_collate_fn(batch):
+def af_collate_fn_compressed(batch):
     tensors, face_tensors, targets = [], [], []
 
     # Gather in lists, and encode labels as indices

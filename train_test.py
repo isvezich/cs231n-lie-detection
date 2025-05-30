@@ -8,7 +8,7 @@ import torch.nn as nn
 import torchvision
 from torch.utils.data import Dataset, DataLoader
 
-from dataloader.audio_compressed_visual_dataset import AudioCompressedVisualDataset
+from dataloader.audio_compressed_visual_dataset import AudioCompressedVisualDataset, af_collate_fn_compressed
 # from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from dataloader.audio_visual_dataset import AudioVisualDataset, af_collate_fn
@@ -465,10 +465,10 @@ def train_test(log_name, args):
             train_dataset = AudioCompressedVisualDataset(train_anno, args.audio_path, args.visual_path)
             test_dataset = AudioCompressedVisualDataset(test_anno, args.audio_path, args.visual_path)
             train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True,
-                                      collate_fn=af_collate_fn,
+                                      collate_fn=af_collate_fn_compressed,
                                       num_workers=4)
             test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True,
-                                     collate_fn=af_collate_fn,
+                                     collate_fn=af_collate_fn_compressed,
                                      num_workers=4)
         else:
             raise Exception(" please indicate which model to train: audio, vision, video, or fusion ...")
