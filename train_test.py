@@ -276,7 +276,7 @@ def val_one_epoch(args, val_data_loader, model, loss_fn, loss_audio, loss_vision
     with torch.no_grad():
         # Iterating over data loader
         if args.model_to_train == "audio":
-            for waves, _, labels in val_data_loader:
+            for waves, _, _, labels in val_data_loader:
                 waves = waves.squeeze(1)
 
                 # Loading waves and labels to device
@@ -294,7 +294,7 @@ def val_one_epoch(args, val_data_loader, model, loss_fn, loss_audio, loss_vision
                 epoch_predictions.append(torch.argmax(preds, dim=1))
                 epoch_labels.append(labels)
         elif args.model_to_train == "vision" or args.model_to_train == "vision_compressed":
-            for _, faces, labels in val_data_loader:
+            for _, faces, _, labels in val_data_loader:
                 # Loading waves and labels to device
                 faces = faces.to(args.device)
                 labels = labels.to(args.device)
@@ -311,7 +311,7 @@ def val_one_epoch(args, val_data_loader, model, loss_fn, loss_audio, loss_vision
                 epoch_labels.append(labels)
 
         elif args.model_to_train == "video":
-            for _, faces, labels in val_data_loader:
+            for _, _, faces, labels in val_data_loader:
                 # Loading waves and labels to device
                 faces = faces.to(args.device)
                 labels = labels.to(args.device)
@@ -328,12 +328,13 @@ def val_one_epoch(args, val_data_loader, model, loss_fn, loss_audio, loss_vision
                 epoch_labels.append(labels)
 
         else:
-            for waves, faces, labels in val_data_loader:
+            for waves, faces, faces_video, labels in val_data_loader:
                 waves = waves.squeeze(1)
 
                 # Loading waves and labels to device
                 waves = waves.to(args.device)
                 faces = faces.to(args.device)
+                faces_video = faces_video.to(args.device)
                 labels = labels.to(args.device)
 
                 # Forward
