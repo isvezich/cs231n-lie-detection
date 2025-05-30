@@ -87,7 +87,14 @@ class AudioCompressedVisualDataset(Dataset):
             single_frame = frames[i, :, :, :]
             face_frames.append(self.transforms(single_frame))
 
+        print("FACE FRAME IS")
+        print(len(face_frames))
+        if len(face_frames) < 64:
+            raise Exception(f"FOUND FACE FRAME SIZE {file_path} {len(face_frames)}")
         face_frames = torch.stack(face_frames, 0)
+        face_frames.type(torch.float32)
+        print("FRAMES FINAL")
+        print(face_frames.shape)
         face_frames.type(torch.float32)
 
         # assign integer to labels

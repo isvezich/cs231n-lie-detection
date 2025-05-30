@@ -62,22 +62,41 @@ class AudioVisualDataset(Dataset):
         # mono_waveform = waveform.unsqueeze(0)
         # mono_waveform.type(torch.float32)
         mono_waveform = None
+        print(clip_name)
+        if clip_name == 'BRI_WILTY_EP61_truth_12':
+            print("GOT HERE CLIP")
 
         #  get face feature path
         file_path = self.img_dir + clip_name + '/'
         # list all jpeg images
         frame_names = [i for i in os.listdir(file_path) if i.split('.')[-1] == 'jpg']
+        if clip_name == 'BRI_WILTY_EP61_truth_12':
+            print("GOT HERE CLIPjsjsjs")
+            print(len(frame_names))
 
         # sample 64 face frames
         target_frames = np.linspace(0, len(frame_names) - 1, num=self.number_of_target_frames)
         target_frames = np.around(target_frames).astype(
             int)  # certain frames may be redundant because of rounding to the nearest integer
+        if clip_name == 'BRI_WILTY_EP61_truth_12':
+            print("GOT HERE target_frames")
+            print(len(target_frames))
+            print(len(frame_names))
+            # print(frame_names[60])
         face_frames = []
         for i in target_frames:
             img = np.asarray(Image.open(file_path + frame_names[i])) / 255.0
-            print("IMAGE IS")
-            print(img.shape)
             face_frames.append(self.transforms(img))
+            if clip_name == 'BRI_WILTY_EP61_truth_12':
+                print(i)
+                print(len(face_frames))
+                print("IMAGE IS")
+                print(img.shape)
+
+        if clip_name == 'BRI_WILTY_EP61_truth_12':
+            print("IN EXECEIOTN")
+            print(len(face_frames))
+            raise Exception(f"FOUND FACE FRAME SIZE {len(face_frames)} {len(target_frames)}")
         face_frames = torch.stack(face_frames, 0)
         face_frames.type(torch.float32)
 
