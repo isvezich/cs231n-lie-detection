@@ -63,38 +63,37 @@ class AudioCompressedVisualDataset(Dataset):
 
         frames = np.load(file_path)
 
-        print("LOADLED FRAMES")
-        print(frames.shape)
+        # print("LOADLED FRAMES")
+        # print(frames.shape)
 
         frames = frames[0, :, :, :, :]
-        print("AFTER SQ")
-        print(frames.shape)
+        # print("AFTER SQ")
+        # print(frames.shape)
         if frames.shape[0] > self.number_of_target_frames:
             index = np.random.choice(frames.shape[0], self.number_of_target_frames, replace=False)
             frames = frames[index]
-        print("FRAMES AFTER")
-        print(frames.shape)
+        # print("FRAMES AFTER")
+        # print(frames.shape)
 
         # frame_names = [i for i in os.listdir(file_path) if i.split('.')[-1] == 'npy']
 
         # sample 64 face frames
-        # target_frames = np.linspace(0, len(frame_names) - 1, num=self.number_of_target_frames)
-
-        # target_frames = np.around(target_frames).astype(
-        #     int)  # certain frames may be redundant because of rounding to the nearest integer
+        target_frames = np.linspace(0, len(frame_names) - 1, num=self.number_of_target_frames)
+        target_frames = np.around(target_frames).astype(
+            int)  # certain frames may be redundant because of rounding to the nearest integer
         face_frames = []
-        for i in range(frames.shape[0]):
+        for i in target_frames:
             single_frame = frames[i, :, :, :]
             face_frames.append(self.transforms(single_frame))
 
-        print("FACE FRAME IS")
-        print(len(face_frames))
+        # print("FACE FRAME IS")
+        # print(len(face_frames))
         if len(face_frames) < 64:
             raise Exception(f"FOUND FACE FRAME SIZE {file_path} {len(face_frames)}")
         face_frames = torch.stack(face_frames, 0)
         face_frames.type(torch.float32)
-        print("FRAMES FINAL")
-        print(face_frames.shape)
+        # print("FRAMES FINAL")
+        # print(face_frames.shape)
         face_frames.type(torch.float32)
 
         # assign integer to labels
