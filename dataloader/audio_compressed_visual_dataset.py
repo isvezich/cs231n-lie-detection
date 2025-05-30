@@ -78,7 +78,7 @@ class AudioCompressedVisualDataset(Dataset):
         # frame_names = [i for i in os.listdir(file_path) if i.split('.')[-1] == 'npy']
 
         # sample 64 face frames
-        target_frames = np.linspace(0, len(frame_names) - 1, num=self.number_of_target_frames)
+        target_frames = np.linspace(0, frames.shape[0] - 1, num=self.number_of_target_frames)
         target_frames = np.around(target_frames).astype(
             int)  # certain frames may be redundant because of rounding to the nearest integer
         face_frames = []
