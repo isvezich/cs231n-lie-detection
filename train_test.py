@@ -60,7 +60,7 @@ def parse_options():
 
     parser.add_argument('--log', type=str, default="logs", help='log and save model name')
     parser.add_argument('--protocols', type=list,
-                        default=[['train_fold4.csv', 'test_fold4.csv']],
+                        default=[['train_fold3.csv', 'test_fold3.csv']],
                         help='protocols for train/test')
 
     """
@@ -179,6 +179,39 @@ def train_one_epoch(args, train_data_loader, model, optimizer, loss_fn, loss_aud
             if i % 10 == 0:
                 print("iter {}, loss {:.5f}".format(str(i), loss))
 
+    elif args.model_to_train == "vision_compressed":
+
+        ###Iterating over data loader
+        for i, (_, faces, labels) in enumerate(train_data_loader):
+            faces = faces.to(args.device)
+            labels = labels.to(args.device)
+
+            # Reseting Gradients
+            optimizer.zero_grad()
+
+            # grid = torchvision.utils.make_grid(faces)
+            # writer.add_image('images', grid, 0)
+            # writer.add_graph(model, faces)
+
+            # Forward
+            preds = model(faces)
+
+            # Calculating Loss
+            _loss = loss_fn(preds, labels)
+            loss = _loss.item()
+            epoch_loss.append(loss)
+
+            # Backward
+            _loss.backward()
+            optimizer.step()
+
+            epoch_predictions.append(torch.argmax(preds, dim=1))
+            epoch_labels.append(labels)
+
+            if i % 10 == 0:
+                print("iter {}, loss {:.5f}".format(str(i), loss))
+
+
     elif args.model_to_train == "video":
 
         ###Iterating over data loader
@@ -293,8 +326,24 @@ def val_one_epoch(args, val_data_loader, model, loss_fn, loss_audio, loss_vision
 
                 epoch_predictions.append(torch.argmax(preds, dim=1))
                 epoch_labels.append(labels)
-        elif args.model_to_train == "vision" or args.model_to_train == "vision_compressed":
+        elif args.model_to_train == "vision":
             for _, faces, _, labels in val_data_loader:
+                # Loading waves and labels to device
+                faces = faces.to(args.device)
+                labels = labels.to(args.device)
+
+                # Forward
+                preds = model(faces)
+
+                # Calculating Loss
+                _loss = loss_fn(preds, labels)
+                loss = _loss.item()
+                epoch_loss.append(loss)
+
+                epoch_predictions.append(torch.argmax(preds, dim=1))
+                epoch_labels.append(labels)
+        elif args.model_to_train == "vision_compressed":
+            for _, faces, labels in val_data_loader:
                 # Loading waves and labels to device
                 faces = faces.to(args.device)
                 labels = labels.to(args.device)
