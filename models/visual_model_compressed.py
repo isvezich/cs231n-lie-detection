@@ -79,15 +79,15 @@ class ViT_compressed_model(nn.Module):
         layer_list = []
 
         for i in range(self.num_encoders):
-            if self.adapter:
-                if self.adapter_type == 'nlp':
-                    layer_list.append(vit_adapter_nlp(transformer_encoder=vit.layers[i]))
-                else:
-                    layer_list.append(vit_adapter_conv(transformer_encoder=vit.layers[i]))
-            else:
-                # fine_tune enoder in case we donot use adapters
-                for p in vit.layers[i].parameters(): p.requires_grad = True
-                layer_list.append(vit.layers[i])
+            # if self.adapter:
+            #     if self.adapter_type == 'nlp':
+            #         layer_list.append(vit_adapter_nlp(transformer_encoder=vit.layers[i]))
+            #     else:
+            #         layer_list.append(vit_adapter_conv(transformer_encoder=vit.layers[i]))
+            # else:
+            # fine_tune enoder in case we donot use adapters
+            for p in vit.layers[i].parameters(): p.requires_grad = True
+            layer_list.append(vit.layers[i])
 
         # add final encoder layer norm
         layer_list.append(nn.LayerNorm((768,), eps=1e-06, elementwise_affine=True))
