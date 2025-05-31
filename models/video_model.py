@@ -107,7 +107,7 @@ class MViT_model(nn.Module):
         # print(f"x shape after pos embedding: {x.shape}")
         print("X SHAPE")
         print(x.shape)
-        x = self.MViT_Encoder(x)
+        x = self.MViT_Encoder(x, (n_f, H, W))
 
         # for block in self.MViT_Encoder:
         #     if hasattr(block, 'forward'):
