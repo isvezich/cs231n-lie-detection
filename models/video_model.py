@@ -109,7 +109,7 @@ class MViT_model(nn.Module):
         # print(x.shape)
         # x = self.MViT_Encoder(x)
         # thw = (n_f, H, W)
-        thw = (63, 1, 1)
+        thw = (7, 3, 3)
 
         for block in self.MViT_Encoder:
             if hasattr(block, 'forward'):
