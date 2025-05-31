@@ -71,6 +71,7 @@ class MViT_model(nn.Module):
 
         # Load pretrained MViT
         base_mvit = torchvision.models.video.mvit_v2_s(weights="DEFAULT")
+        for p in base_mvit.parameters(): p.requires_grad = False
         self.pos_embedding = nn.Parameter(torch.zeros(1, 64, 96))  # 96 dim for MViT input
 
         # Build custom encoder with adapters
