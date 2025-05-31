@@ -105,6 +105,8 @@ class MViT_model(nn.Module):
         # print(f"x shape after projection: {x.shape}")
         x = x + self.pos_embedding
         # print(f"x shape after pos embedding: {x.shape}")
+        print("X SHAPE")
+        print(x.shape)
         x = self.MViT_Encoder(x)
 
         # for block in self.MViT_Encoder:
