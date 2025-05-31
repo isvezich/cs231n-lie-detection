@@ -105,17 +105,17 @@ class MViT_model(nn.Module):
         # print(f"x shape after projection: {x.shape}")
         x = x + self.pos_embedding
         # print(f"x shape after pos embedding: {x.shape}")
-        # x = self.MViT_Encoder(x)
+        x = self.MViT_Encoder(x)
 
-        for block in self.MViT_Encoder:
-            if hasattr(block, 'forward'):
-                # b_s, n_f, d = x.shape
-                thw = (64 - 1, 1, 1)
-                # print(f"x.shape: {x.shape}, thw shape: {thw}")
-                x, thw = block(x, thw)
-                # print("finished block")
-            else:
-                x = block(x)
+        # for block in self.MViT_Encoder:
+        #     if hasattr(block, 'forward'):
+        #         # b_s, n_f, d = x.shape
+        #         thw = (64 - 1, 1, 1)
+        #         # print(f"x.shape: {x.shape}, thw shape: {thw}")
+        #         x, thw = block(x, thw)
+        #         # print("finished block")
+        #     else:
+        #         x = block(x)
 
         logits = self.classifier(x)
         return torch.mean(logits, 1)
