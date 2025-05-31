@@ -22,7 +22,7 @@ class cnn_face(nn.Module):
     def __init__(self, ):
         super(cnn_face, self).__init__()
 
-        self.conv1 = conv2d_block(1, 64, k=3, pad=(1, 1), s=1)
+        self.conv1 = conv2d_block(1, 64, k=5, pad=(2, 2), s=1)
         self.layer1 = nn.Sequential(
             conv2d_block(64, 64),
             conv2d_block(64, 64),
@@ -51,18 +51,12 @@ class cnn_face(nn.Module):
     def forward(self, x):
         x = self.conv1(x)
         x = self.layer1(x) + x
-        x = self.layer1(x) + x
-        x = self.layer1(x) + x
         x = self.conv2(x)
-        x = self.layer2(x) + x
-        x = self.layer2(x) + x
         x = self.layer2(x) + x
         x = self.conv3(x)
         x = self.layer3(x) + x
-        x = self.layer3(x) + x
-        x = self.layer3(x) + x
-        # x = self.conv4(x)
-        # x = self.layer4(x) + x
+        x = self.conv4(x)
+        x = self.layer4(x) + x
 
         return self.avg_pool(x)
 
@@ -76,7 +70,7 @@ class ViT_compressed_model(nn.Module):
         self.adapter_type = adapter_type
 
         self.projection = nn.Sequential(
-            nn.Linear(256, 768),
+            nn.Linear(512, 768),
             nn.ReLU(),
         )
 
@@ -121,7 +115,7 @@ class ViT_compressed_model(nn.Module):
         b_s, no_of_frames, C, H, W = x.shape
         x = torch.reshape(x, (b_s * no_of_frames, C, H, W))
         features = self.cnn_feature_extractor(x)
-        features = torch.reshape(features, (b_s, no_of_frames, 256))
+        features = torch.reshape(features, (b_s, no_of_frames, 512))
 
         # projection for vit encoder + position embedding
         projections = self.projection(features) + self.pos_embedding
