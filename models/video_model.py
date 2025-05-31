@@ -94,7 +94,6 @@ class MViT_model(nn.Module):
         self.classifier = nn.Linear(384, 2)
 
     def forward(self, x):
-        # print(x.shape)
         b_s, n_f, C, H, W = x.shape
         # x = x.view(b_s * n_f, C, H, W)  # TODO: this seems to make it 4d, why?
         features = self.cnn_feature_extractor(x)
@@ -105,19 +104,25 @@ class MViT_model(nn.Module):
         # print(f"x shape after projection: {x.shape}")
         x = x + self.pos_embedding
         # print(f"x shape after pos embedding: {x.shape}")
-        print("X SHAPE")
-        print(x.shape)
-        x = self.MViT_Encoder(x, (n_f, H, W))
+        # print("X SHAPE")
+        # print(x.shape)
+        # x = self.MViT_Encoder(x)
+        # thw = (n_f, H, W)
+        thw = (63, 1, 1)
 
-        # for block in self.MViT_Encoder:
-        #     if hasattr(block, 'forward'):
-        #         # b_s, n_f, d = x.shape
-        #         thw = (64 - 1, 1, 1)
-        #         # print(f"x.shape: {x.shape}, thw shape: {thw}")
-        #         x, thw = block(x, thw)
-        #         # print("finished block")
-        #     else:
-        #         x = block(x)
+        for block in self.MViT_Encoder:
+            if hasattr(block, 'forward'):
+                # b_s, n_f, d = x.shape
+                # thw = (64 - 1, 1, 1)
+                # print(f"x shape {x.shape}")
+
+                # print(f"x.shape: {x.shape}, thw shape: {thw}")
+                x, thw = block(x, thw)
+                # print("AFTER THW")
+                # print(thw)
+                # print("finished block")
+            else:
+                x = block(x)
 
         logits = self.classifier(x)
         return torch.mean(logits, 1)
