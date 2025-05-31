@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torchvision
 from models.adapter import mvit_adapter_conv, mvit_adapter_nlp
+from torchvision.models.video.mvit import PositionalEncoding
 
 
 
@@ -71,8 +72,15 @@ class MViT_model(nn.Module):
 
         # Load pretrained MViT
         base_mvit = torchvision.models.video.mvit_v2_s(weights="DEFAULT")
-        for p in base_mvit.parameters(): p.requires_grad = False
+        # for p in base_mvit.parameters(): p.requires_grad = False
         self.pos_embedding = nn.Parameter(torch.zeros(1, 64, 96))  # 96 dim for MViT input
+        # Spatio-Temporal Class Positional Encoding
+        self.pos_encoding = PositionalEncoding(
+            embed_size=96,
+            spatial_size=(196, 196),
+            temporal_size=64,
+            rel_pos_embed=False,
+        )
 
         # Build custom encoder with adapters
         layers = []
@@ -96,20 +104,27 @@ class MViT_model(nn.Module):
 
     def forward(self, x):
         b_s, n_f, C, H, W = x.shape
+        print(f"x shape {x.shape}")
         # x = x.view(b_s * n_f, C, H, W)  # TODO: this seems to make it 4d, why?
         features = self.cnn_feature_extractor(x)
+        print(f"x shape after cnn: {x.shape}")
         # print(f"features shape: {features.shape}")
         features = features.view(b_s, n_f, 256)
 
         x = self.projection(features)
-        # print(f"x shape after projection: {x.shape}")
-        x = x + self.pos_embedding
+        print(f"x shape after projection: {x.shape}")
+        # x = x + self.pos_embedding
+
+        # add positional encoding
+        x = self.pos_encoding(x)
+
+        # pass patches through the encoder
+        thw = (self.pos_encoding.temporal_size,) + self.pos_encoding.spatial_size
+
         # print(f"x shape after pos embedding: {x.shape}")
-        # print("X SHAPE")
-        # print(x.shape)
         # x = self.MViT_Encoder(x)
         # thw = (n_f, H, W)
-        thw = (7, 3, 3)
+        # thw = (7, 3, 3)
 
         for block in self.MViT_Encoder:
             if hasattr(block, 'forward'):
