@@ -40,11 +40,11 @@ class cnn_face(nn.Module):
             conv2d_block(256, 256),
         )
 
-        # self.conv4 = conv2d_block(256, 512, k=3, pad=(1, 1), s=1)
-        # self.layer4 = nn.Sequential(
-        #     conv2d_block(512, 512),
-        #     conv2d_block(512, 512),
-        # )
+        self.conv4 = conv2d_block(256, 512, k=3, pad=(1, 1), s=1)
+        self.layer4 = nn.Sequential(
+            conv2d_block(512, 512),
+            conv2d_block(512, 512),
+        )
 
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
 
@@ -55,8 +55,8 @@ class cnn_face(nn.Module):
         x = self.layer2(x) + x
         x = self.conv3(x)
         x = self.layer3(x) + x
-        # x = self.conv4(x)
-        # x = self.layer4(x) + x
+        x = self.conv4(x)
+        x = self.layer4(x) + x
 
         return self.avg_pool(x)
 
@@ -70,13 +70,12 @@ class ViT_compressed_model(nn.Module):
         self.adapter_type = adapter_type
 
         self.projection = nn.Sequential(
-            nn.Linear(256, 768),
+            nn.Linear(512, 768),
             nn.ReLU(),
         )
 
-        # Load imagenet pretrained ViT Base 16 and freeze all parameters first
+        # Load imagenet ViT Base 16
         vit_b_16 = torchvision.models.vit_b_16(pretrained=False)
-        # for p in vit_b_16.parameters(): p.requires_grad = False
         # extract encoder alone and discard CNN (patchify + linear projection) feature extractor, classifer head
         # Refer Encoder() class in https://pytorch.org/vision/main/_modules/torchvision/models/vision_transformer.html
         vit = vit_b_16.encoder
@@ -87,13 +86,6 @@ class ViT_compressed_model(nn.Module):
         layer_list = []
 
         for i in range(self.num_encoders):
-            # if self.adapter:
-            #     if self.adapter_type == 'nlp':
-            #         layer_list.append(vit_adapter_nlp(transformer_encoder=vit.layers[i]))
-            #     else:
-            #         layer_list.append(vit_adapter_conv(transformer_encoder=vit.layers[i]))
-            # else:
-            # fine_tune enoder in case we donot use adapters
             for p in vit.layers[i].parameters(): p.requires_grad = True
             layer_list.append(vit.layers[i])
 
@@ -115,7 +107,7 @@ class ViT_compressed_model(nn.Module):
         b_s, no_of_frames, C, H, W = x.shape
         x = torch.reshape(x, (b_s * no_of_frames, C, H, W))
         features = self.cnn_feature_extractor(x)
-        features = torch.reshape(features, (b_s, no_of_frames, 256))
+        features = torch.reshape(features, (b_s, no_of_frames, 512))
 
         # projection for vit encoder + position embedding
         projections = self.projection(features) + self.pos_embedding
@@ -126,5 +118,3 @@ class ViT_compressed_model(nn.Module):
 
         # average predictions for every token
         return torch.mean(logits, 1)
-
-# model = ViT_model(num_encoders=4, adapter=True, adapter_type='nlp')
