@@ -496,8 +496,8 @@ def train_test(log_name, args):
         # Optimizer
         print("USING PARAMS")
         print(model.parameters())
-        # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=0.00001)
-        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=0.00001)
+        # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
         # Loss Function
         loss_fn = nn.CrossEntropyLoss()
