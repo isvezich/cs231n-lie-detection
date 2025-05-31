@@ -25,7 +25,7 @@ class cnn_face(nn.Module):
     def __init__(self, ):
         super(cnn_face, self).__init__()
 
-        self.conv1 = conv3d_block(64, 64, k=7, pad=3, s=2)
+        self.conv1 = conv3d_block(3, 64, k=7, pad=3, s=2)
         self.layer1 = nn.Sequential(
             conv3d_block(64, 64),
             conv3d_block(64, 64),
@@ -79,7 +79,7 @@ class MViT_model(nn.Module):
             embed_size=96,
             spatial_size=(160, 160),
             temporal_size=64,
-            rel_pos_embed=False,
+            rel_pos_embed=True,
         )
 
         # Build custom encoder with adapters
@@ -105,26 +105,30 @@ class MViT_model(nn.Module):
     def forward(self, x):
         b_s, n_f, C, H, W = x.shape
         print(f"x shape {x.shape}")
+        x = x.transpose(1, 2)
         # x = x.view(b_s * n_f, C, H, W)  # TODO: this seems to make it 4d, why?
         features = self.cnn_feature_extractor(x)
-        print(f"x shape after cnn: {x.shape}")
+        print(f"x shape after cnn: {features.shape}")
+        features = features.flatten(2).transpose(1, 2)
+        print(f"x shape after flatten: {features.shape}")
         # print(f"features shape: {features.shape}")
-        features = features.view(b_s, n_f, 256)
+        # features = features.view(b_s, n_f, 256)
 
-        # x = self.projection(features)
-        # print(f"x shape after projection: {x.shape}")
+        features = self.projection(features)
+        print(f"x shape after projection: {features.shape}")
         # x = x + self.pos_embedding
 
         # add positional encoding
-        x = self.pos_encoding(x)
+        x = self.pos_encoding(features)
+        print(f"x after pos encoding {x.shape}")
 
         # pass patches through the encoder
-        thw = (self.pos_encoding.temporal_size,) + self.pos_encoding.spatial_size
+        # thw = (self.pos_encoding.temporal_size,) + self.pos_encoding.spatial_size
 
         # print(f"x shape after pos embedding: {x.shape}")
         # x = self.MViT_Encoder(x)
         # thw = (n_f, H, W)
-        # thw = (7, 3, 3)
+        thw = (4, 4, 4)
 
         for block in self.MViT_Encoder:
             if hasattr(block, 'forward'):
