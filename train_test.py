@@ -53,7 +53,7 @@ def parse_options():
     parser.add_argument('--data_root', type=str, default='/home/lillian/src/cs231n-lie-detection/data/')
     parser.add_argument('--audio_path', type=str, default='/home/lillian/src/cs231n-lie-detection/data/audio_files/',
                         help='audio dataset root dir')
-    parser.add_argument('--visual_path', type=str, default='/home/lillian/src/cs231n-lie-detection/data/compressed_frames/',
+    parser.add_argument('--visual_path', type=str, default='/home/lillian/src/cs231n-lie-detection/data/face_frames/',
                         help='visual (FACE) dataset root dir')
 
     #### TRAINING LOGS
@@ -494,7 +494,9 @@ def train_test(log_name, args):
         print("\t Model Loaded")
 
         # Optimizer
-        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+        print("USING PARAMS")
+        print(model.parameters())
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=0.00001)
 
         # Loss Function
         loss_fn = nn.CrossEntropyLoss()
