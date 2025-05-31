@@ -57,7 +57,6 @@ class cnn_face(nn.Module):
         x = self.layer2(x) + x
         x = self.conv3(x)
         x = self.layer3(x) + x
-        x = self.layer3(x) + x
         x = self.conv4(x)
         x = self.layer4(x) + x
 
