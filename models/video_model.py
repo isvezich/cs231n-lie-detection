@@ -77,7 +77,7 @@ class MViT_model(nn.Module):
         # Spatio-Temporal Class Positional Encoding
         self.pos_encoding = PositionalEncoding(
             embed_size=96,
-            spatial_size=(196, 196),
+            spatial_size=(160, 160),
             temporal_size=64,
             rel_pos_embed=False,
         )
@@ -111,8 +111,8 @@ class MViT_model(nn.Module):
         # print(f"features shape: {features.shape}")
         features = features.view(b_s, n_f, 256)
 
-        x = self.projection(features)
-        print(f"x shape after projection: {x.shape}")
+        # x = self.projection(features)
+        # print(f"x shape after projection: {x.shape}")
         # x = x + self.pos_embedding
 
         # add positional encoding
