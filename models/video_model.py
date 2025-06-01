@@ -37,11 +37,11 @@ class cnn_face(nn.Module):
             conv3d_block(128, 128),
         )
 
-        # self.conv3 = conv3d_block(128, 256, k=3, pad=(1, 1, 1), s=2)
-        # self.layer3 = nn.Sequential(
-        #     conv3d_block(256, 256),
-        #     conv3d_block(256, 256),
-        # )
+        self.conv3 = conv3d_block(128, 256, k=3, pad=(1, 1, 1), s=2)
+        self.layer3 = nn.Sequential(
+            conv3d_block(256, 256),
+            conv3d_block(256, 256),
+        )
 
         self.avg_pool = nn.AdaptiveAvgPool3d(4)
 
@@ -50,8 +50,8 @@ class cnn_face(nn.Module):
         x = self.layer1(x) + x
         x = self.conv2(x)
         x = self.layer2(x) + x
-        # x = self.conv3(x)
-        # x = self.layer3(x) + x
+        x = self.conv3(x)
+        x = self.layer3(x) + x
 
         return self.avg_pool(x)
 
@@ -66,7 +66,7 @@ class MViT_model(nn.Module):
         # Feature extractor (same CNN as before)
         self.cnn_feature_extractor = cnn_face()
         self.projection = nn.Sequential(
-            nn.Linear(128, 96),  # Match MViT expected input dim
+            nn.Linear(256, 96),  # Match MViT expected input dim
             nn.ReLU(),
         )
 
