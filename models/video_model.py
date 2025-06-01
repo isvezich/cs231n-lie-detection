@@ -77,8 +77,8 @@ class MViT_model(nn.Module):
         # Spatio-Temporal Class Positional Encoding
         self.pos_encoding = PositionalEncoding(
             embed_size=96,
-            spatial_size=(160, 160),
-            temporal_size=64,
+            spatial_size=(4, 4),
+            temporal_size=4,
             rel_pos_embed=True,
         )
 
@@ -104,23 +104,23 @@ class MViT_model(nn.Module):
 
     def forward(self, x):
         b_s, n_f, C, H, W = x.shape
-        print(f"x shape {x.shape}")
+        # print(f"x shape {x.shape}")
         x = x.transpose(1, 2)
         # x = x.view(b_s * n_f, C, H, W)  # TODO: this seems to make it 4d, why?
         features = self.cnn_feature_extractor(x)
-        print(f"x shape after cnn: {features.shape}")
+        # print(f"x shape after cnn: {features.shape}")
         features = features.flatten(2).transpose(1, 2)
-        print(f"x shape after flatten: {features.shape}")
+        # print(f"x shape after flatten: {features.shape}")
         # print(f"features shape: {features.shape}")
         # features = features.view(b_s, n_f, 256)
 
         features = self.projection(features)
-        print(f"x shape after projection: {features.shape}")
+        # print(f"x shape after projection: {features.shape}")
         # x = x + self.pos_embedding
 
         # add positional encoding
         x = self.pos_encoding(features)
-        print(f"x after pos encoding {x.shape}")
+        # print(f"x after pos encoding {x.shape}")
 
         # pass patches through the encoder
         # thw = (self.pos_encoding.temporal_size,) + self.pos_encoding.spatial_size
