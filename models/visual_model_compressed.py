@@ -55,8 +55,8 @@ class cnn_face(nn.Module):
         x = self.layer2(x) + x
         x = self.conv3(x)
         x = self.layer3(x) + x
-        x = self.conv4(x)
-        x = self.layer4(x) + x
+        # x = self.conv4(x)
+        # x = self.layer4(x) + x
 
         return self.avg_pool(x)
 
@@ -70,7 +70,7 @@ class ViT_compressed_model(nn.Module):
         self.adapter_type = adapter_type
 
         self.projection = nn.Sequential(
-            nn.Linear(784, 768),
+            nn.Linear(256, 768),
             nn.ReLU(),
         )
 
@@ -106,8 +106,8 @@ class ViT_compressed_model(nn.Module):
         # Feature extraction for all 64 images
         b_s, no_of_frames, C, H, W = x.shape
         features = torch.reshape(x, (b_s * no_of_frames, C, H, W))
-        # features = self.cnn_feature_extractor(features)
-        features = torch.reshape(features, (b_s, no_of_frames, 784))
+        features = self.cnn_feature_extractor(features)
+        features = torch.reshape(features, (b_s, no_of_frames, 256))
 
         # projection for vit encoder + position embedding
         # print(f"features before {features.shape}")
