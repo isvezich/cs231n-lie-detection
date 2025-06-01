@@ -20,6 +20,7 @@ from sklearn.metrics import classification_report, accuracy_score, f1_score, roc
 
 from models.visual_model import ViT_model
 from models.video_model import MViT_model
+from models.video_model_compressed import MViT_compressed_model
 from torch.utils.tensorboard import SummaryWriter
 
 from models.visual_model_compressed import ViT_compressed_model
@@ -179,7 +180,7 @@ def train_one_epoch(args, train_data_loader, model, optimizer, loss_fn, loss_aud
             if i % 10 == 0:
                 print("iter {}, loss {:.5f}".format(str(i), loss))
 
-    elif args.model_to_train == "vision_compressed":
+    elif args.model_to_train == "vision_compressed" or args.model_to_train == "video_compressed":
 
         ###Iterating over data loader
         for i, (_, faces, labels) in enumerate(train_data_loader):
@@ -342,7 +343,7 @@ def val_one_epoch(args, val_data_loader, model, loss_fn, loss_audio, loss_vision
 
                 epoch_predictions.append(torch.argmax(preds, dim=1))
                 epoch_labels.append(labels)
-        elif args.model_to_train == "vision_compressed":
+        elif args.model_to_train == "vision_compressed" or args.model_to_train == "video_compressed":
             for _, faces, labels in val_data_loader:
                 # Loading waves and labels to device
                 faces = faces.to(args.device)
@@ -461,7 +462,7 @@ def train_test(log_name, args):
             test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=True,
                                      collate_fn=af_collate_fn,
                                      num_workers=4)
-        elif args.model_to_train in ['vision_compressed']:
+        elif args.model_to_train in ['vision_compressed', 'video_compressed']:
             train_dataset = AudioCompressedVisualDataset(train_anno, args.audio_path, args.visual_path)
             test_dataset = AudioCompressedVisualDataset(test_anno, args.audio_path, args.visual_path)
             train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True,
@@ -486,6 +487,9 @@ def train_test(log_name, args):
             model.to(args.device)
         elif args.model_to_train == 'video':
             model = MViT_model(args.num_encoders, args.adapter, args.adapter_type)
+            model.to(args.device)
+        elif args.model_to_train == 'video_compressed':
+            model = MViT_compressed_model(args.num_encoders, args.adapter, args.adapter_type)
             model.to(args.device)
         else:
             model = Fusion(args.fusion_type, args.num_encoders, args.adapter,
