@@ -10,7 +10,7 @@ import torchaudio
 
 
 class AudioVisualDataset(Dataset):
-    def __init__(self, annotations_file, audio_dir, img_dir, num_tokens=64, frame_size=160):
+    def __init__(self, annotations_file, audio_dir, img_dir, num_tokens=64, frame_size=224):
         super(AudioVisualDataset, self).__init__()
 
         self.annos = pd.read_csv(annotations_file)  # [file_name, label, gender]

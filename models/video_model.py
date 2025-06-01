@@ -37,11 +37,11 @@ class cnn_face(nn.Module):
             conv3d_block(128, 128),
         )
 
-        self.conv3 = conv3d_block(128, 256, k=3, pad=(1, 1, 1), s=2)
-        self.layer3 = nn.Sequential(
-            conv3d_block(256, 256),
-            conv3d_block(256, 256),
-        )
+        # self.conv3 = conv3d_block(128, 256, k=3, pad=(1, 1, 1), s=2)
+        # self.layer3 = nn.Sequential(
+        #     conv3d_block(256, 256),
+        #     conv3d_block(256, 256),
+        # )
 
         self.avg_pool = nn.AdaptiveAvgPool3d(4)
 
@@ -50,8 +50,8 @@ class cnn_face(nn.Module):
         x = self.layer1(x) + x
         x = self.conv2(x)
         x = self.layer2(x) + x
-        x = self.conv3(x)
-        x = self.layer3(x) + x
+        # x = self.conv3(x)
+        # x = self.layer3(x) + x
 
         return self.avg_pool(x)
 
@@ -66,7 +66,7 @@ class MViT_model(nn.Module):
         # Feature extractor (same CNN as before)
         self.cnn_feature_extractor = cnn_face()
         self.projection = nn.Sequential(
-            nn.Linear(256, 96),  # Match MViT expected input dim
+            nn.Linear(128, 96),  # Match MViT expected input dim
             nn.ReLU(),
         )
 
@@ -77,8 +77,8 @@ class MViT_model(nn.Module):
         # Spatio-Temporal Class Positional Encoding
         self.pos_encoding = PositionalEncoding(
             embed_size=96,
-            spatial_size=(4, 4),
-            temporal_size=4,
+            spatial_size=(4, 4),  # Due to the conv3d layer reductions
+            temporal_size=4,  # Due to the conv3d layer reductions
             rel_pos_embed=True,
         )
 
@@ -127,7 +127,6 @@ class MViT_model(nn.Module):
 
         # print(f"x shape after pos embedding: {x.shape}")
         # x = self.MViT_Encoder(x)
-        # thw = (n_f, H, W)
         thw = (4, 4, 4)
 
         for block in self.MViT_Encoder:
@@ -138,8 +137,6 @@ class MViT_model(nn.Module):
 
                 # print(f"x.shape: {x.shape}, thw shape: {thw}")
                 x, thw = block(x, thw)
-                # print("AFTER THW")
-                # print(thw)
                 # print("finished block")
             else:
                 x = block(x)
