@@ -496,7 +496,7 @@ def train_test(log_name, args):
         # Optimizer
         print("USING PARAMS")
         print(model.parameters())
-        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=0.0001)
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, betas=(0.8, 0.990))
         # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
         # Loss Function
