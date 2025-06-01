@@ -70,7 +70,7 @@ class ViT_compressed_model(nn.Module):
         self.adapter_type = adapter_type
 
         self.projection = nn.Sequential(
-            nn.Linear(512, 768),
+            nn.Linear(784, 768),
             nn.ReLU(),
         )
 
@@ -105,11 +105,12 @@ class ViT_compressed_model(nn.Module):
 
         # Feature extraction for all 64 images
         b_s, no_of_frames, C, H, W = x.shape
-        x = torch.reshape(x, (b_s * no_of_frames, C, H, W))
-        features = self.cnn_feature_extractor(x)
-        features = torch.reshape(features, (b_s, no_of_frames, 512))
+        features = torch.reshape(x, (b_s * no_of_frames, C, H, W))
+        # features = self.cnn_feature_extractor(features)
+        features = torch.reshape(features, (b_s, no_of_frames, 784))
 
         # projection for vit encoder + position embedding
+        # print(f"features before {features.shape}")
         projections = self.projection(features) + self.pos_embedding
         # feature extraction with transformer encoders
         vit_features = self.ViT_Encoder(projections)
