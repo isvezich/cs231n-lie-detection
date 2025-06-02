@@ -31,27 +31,11 @@ class cnn_face(nn.Module):
             conv3d_block(256, 256),
         )
 
-        # self.conv2 = conv3d_block(64, 128, k=3, pad=1, s=1)
-        # self.layer2 = nn.Sequential(
-        #     conv3d_block(128, 128),
-        #     conv3d_block(128, 128),
-        # )
-        #
-        # self.conv3 = conv3d_block(128, 256, k=3, pad=(1, 1, 1), s=1)
-        # self.layer3 = nn.Sequential(
-        #     conv3d_block(256, 256),
-        #     conv3d_block(256, 256),
-        # )
-
         self.avg_pool = nn.AdaptiveAvgPool3d(4)
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.layer1(x) + x
-        # x = self.conv2(x)
-        # x = self.layer2(x) + x
-        # x = self.conv3(x)
-        # x = self.layer3(x) + x
 
         return self.avg_pool(x)
 
@@ -110,9 +94,7 @@ class MViT_compressed_model(nn.Module):
         features = self.cnn_feature_extractor(x)
         # print(f"x shape after cnn: {features.shape}")
         features = features.flatten(2).transpose(1, 2)
-        # print(f"x shape after flatten: {features.shape}")
-        # print(f"features shape: {features.shape}")
-        # features = features.view(b_s, n_f, 256)
+
 
         features = self.projection(features)
         # print(f"x shape after projection: {features.shape}")
@@ -126,7 +108,6 @@ class MViT_compressed_model(nn.Module):
         # thw = (self.pos_encoding.temporal_size,) + self.pos_encoding.spatial_size
 
         # print(f"x shape after pos embedding: {x.shape}")
-        # x = self.MViT_Encoder(x)
         thw = (4, 4, 4)
 
         for block in self.MViT_Encoder:
