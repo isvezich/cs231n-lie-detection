@@ -20,10 +20,10 @@ from sklearn.metrics import classification_report, accuracy_score, f1_score, roc
 
 from models.visual_model import ViT_model
 from models.video_model import MViT_model
-from models.video_model_compressed import MViT_compressed_model
+from models.video_model_compressed_v2 import MViT_compressed_model
 from torch.utils.tensorboard import SummaryWriter
 
-from models.visual_model_compressed import ViT_compressed_model
+from models.visual_model_compressed_v2 import ViT_compressed_model
 
 # Writer will output to ./runs/ directory by default
 writer = SummaryWriter()
